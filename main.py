@@ -245,9 +245,9 @@ if __name__ == "__main__":
     grid.set((1, 0), None)
     grid.set((1, 1), None)
 
-    # grid.set((3, 4), None)
-    # grid.set((3, 3), None)
-    # grid.set((3, 2), None)
+    grid.set((3, 4), None)
+    grid.set((3, 3), None)
+    grid.set((3, 2), None)
 
     dijkstra(grid, (0, 0), (4, 4))
 
