@@ -19,8 +19,11 @@ class Grid:
             [Node() for _ in range(n)] for _ in range(n)
         ]
 
-    def get(self, index):
+    def get(self, index) -> Node:
         return self.arr[index[0]][index[1]]
+    
+    def get_value(self, index):
+        return self.get(index).min()
 
     def set(self, index, node):
         self.arr[index[0]][index[1]] = node
@@ -81,6 +84,9 @@ class Queue:
 
     def dequeue(self):
         return self.arr.pop(0)
+    
+    def len(self):
+        return len(self.arr)
 
 # Calculate weight at given index (1 at odd sums, 2 at even sums)
 def get_weight(index):
@@ -161,6 +167,75 @@ def dijkstra(grid : Grid, start_index, target_index):
         # If target_index is reached, the algorithm is finished
         if index == target_index:
             return
+        
+# Finds all possible minimum-length paths
+def find_possible_paths(grid : Grid, start_index, target_index):
+    possible_paths = []
+
+    # Builds paths backwards from target_index
+    path_builder = Queue()
+
+    path_builder.queue([target_index])
+    
+    while path_builder.len() > 0:
+        current_path = path_builder.dequeue()
+
+        current_index = current_path[-1]
+
+        # Sort adjecent indicies of current_index based on distance to start
+        # (Horrendous one-liner, I know)
+        indicies = sorted(grid.get_adjacent(current_index), key=lambda x: grid.get_value(x))
+
+        min_dist = grid.get_value(indicies[0])
+
+        # Iterate over all indicies
+        for index in indicies:
+            if index == start_index: # Path finished
+                path = current_path + [index]
+                directions = as_directions(path[::-1])
+                possible_paths.append(directions)
+            
+            # Continue building path for all minimum-distance indicies
+            elif grid.get_value(index) == min_dist:
+                path_builder.queue(current_path + [index])
+
+    return possible_paths
+
+# Calculates number of turns in a path
+# Path has to be expressed as directions e.g ["left", "right", "right", "up"]
+def num_of_turns(path):
+    current_direction = path[0]
+    turns = 0
+
+    for direction in path:
+        if direction != current_direction:
+            turns += 1
+            current_direction = direction
+
+    return turns
+
+# Find path with least number of turns
+def find_minimal_turn_path(grid : Grid, start_index, target_index):
+    possible_paths = find_possible_paths(grid, start_index, target_index)
+
+    return sorted(possible_paths, key=lambda x: num_of_turns(x))[0]
+
+# Translate path of indicies to path of directions
+# For example: [(0, 0), (0, 1), (1, 1)] -> ["right", "down"]
+def as_directions(index_path):
+    res = []
+
+    directions = ["up", "right", "down", "left"]
+
+    for i in range(len(index_path) - 1):
+        index1 = index_path[i]
+        index2 = index_path[i + 1]
+
+        d = get_direction(index1, index2)
+
+        res.append(directions[d])
+
+    return res
 
 if __name__ == "__main__":
     # Example
@@ -170,11 +245,12 @@ if __name__ == "__main__":
     grid.set((1, 0), None)
     grid.set((1, 1), None)
 
-    grid.set((3, 4), None)
-    grid.set((3, 3), None)
-    grid.set((3, 2), None)
+    # grid.set((3, 4), None)
+    # grid.set((3, 3), None)
+    # grid.set((3, 2), None)
 
     dijkstra(grid, (0, 0), (4, 4))
 
     grid.print()
 
+    p = find_minimal_turn_path(grid, (0, 0), (4, 4))
