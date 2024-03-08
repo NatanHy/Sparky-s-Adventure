@@ -123,6 +123,7 @@ def update(grid : Grid, visited_index, unvisited_index):
     unvisited_node = grid.get(unvisited_index)
 
     # Vertex weight based on even/odd index
+    current_weight = get_weight(visited_index)
     weight = get_weight(unvisited_index)
 
     # Direction travelling from visited node to unvisited node
@@ -131,14 +132,14 @@ def update(grid : Grid, visited_index, unvisited_index):
     # Iterate over node value pairs
     for i in range(4):
         # Cost of turning towards target node
-        start_turn_cost = get_turn_cost(i, direction)
+        start_turn_cost = current_weight * get_turn_cost(i, direction)
 
         for j in range(4):
             elm1 = visited_node.values[i]
             elm2 = unvisited_node.values[j]
 
             # Cost of turning to correct orientation after getting to the node
-            end_turn_cost = get_turn_cost(direction, j)
+            end_turn_cost = weight * get_turn_cost(direction, j)
 
             turn_weight = start_turn_cost + end_turn_cost
 
@@ -146,7 +147,6 @@ def update(grid : Grid, visited_index, unvisited_index):
             unvisited_node.values[j] = min(elm2, elm1 + weight + turn_weight)
 
 def dijkstra(grid : Grid, start_index, target_index):
-    visited = []     # List of visited nodes
     queue = Queue()  # Queue of nodes to update
 
     grid.set_start(start_index) # Initialize start_index
@@ -161,8 +161,6 @@ def dijkstra(grid : Grid, start_index, target_index):
             update(grid, index, adj)
 
             queue.queue(adj)
-
-        visited.append(index)
 
         # If target_index is reached, the algorithm is finished
         if index == target_index:
